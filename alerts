@@ -54,7 +54,7 @@ groups:
       summary: "Out of memory (instance {{ $labels.instance }})"
       description: "Node memory is filling up (< 10% left)\n VALUE = {{ $value }}\n LABELS: {{ $labels }}"
   - alert: NodeUnusualNetworkThroughputIn
-    expr: sum by (instance) (irate(node_network_receive_bytes_total[2m])) / 1024 / 1024 > 50
+    expr: sum by (instance) (irate(node_network_receive_bytes_total[2m])) / 1024 / 1024 > 250
     for: 5m
     labels:
       severity: warning
@@ -62,9 +62,9 @@ groups:
       runbook: "https://confluence-engineering.dentsuaegis.com/display/GD/Alert%3A+NodeUnusualNetworkThroughputIn"
     annotations:
       summary: "Unusual network throughput in (instance {{ $labels.instance }})"
-      description: "Host network interfaces are probably receiving too much data (> 50 MB/s)\n VALUE = {{ $value }}\n LABELS: {{ $labels }}"
+      description: "Host network interfaces are probably receiving too much data (> 250 MB/s)\n VALUE = {{ $value }}\n LABELS: {{ $labels }}"
   - alert: NodeUnusualNetworkThroughputOut
-    expr: sum by (instance) (irate(node_network_transmit_bytes_total[2m])) / 1024 / 1024 > 50
+    expr: sum by (instance) (irate(node_network_transmit_bytes_total[2m])) / 1024 / 1024 > 250
     for: 5m
     labels:
       severity: warning
@@ -72,9 +72,9 @@ groups:
       runbook: "https://confluence-engineering.dentsuaegis.com/display/GD/Alert%3A+NodeUnusualNetworkThroughputOut"
     annotations:
       summary: "Unusual network throughput out (instance {{ $labels.instance }})"
-      description: "Host network interfaces are probably sending too much data (> 50 MB/s)\n VALUE = {{ $value }}\n LABELS: {{ $labels }}" 
+      description: "Host network interfaces are probably sending too much data (> 250 MB/s)\n VALUE = {{ $value }}\n LABELS: {{ $labels }}" 
   - alert: NodeUnusualDiskReadRate
-    expr: sum by (instance) (irate(node_disk_read_bytes_total[2m])) / 1024 / 1024 > 50
+    expr: sum by (instance) (irate(node_disk_read_bytes_total[2m])) / 1024 / 1024 > 250
     for: 5m
     labels:
       severity: warning
@@ -84,7 +84,7 @@ groups:
       summary: "Unusual disk read rate (instance {{ $labels.instance }})"
       description: "Disk is probably reading too much data (> 50 MB/s)\n VALUE = {{ $value }}\n LABELS: {{ $labels }}"
   - alert: NodeUnusualDiskWriteRate
-    expr: sum by (instance) (irate(node_disk_written_bytes_total[2m])) / 1024 / 1024 > 50
+    expr: sum by (instance) (irate(node_disk_written_bytes_total[2m])) / 1024 / 1024 > 250
     for: 5m
     labels:
       severity: warning
@@ -92,7 +92,7 @@ groups:
       runbook: "https://confluence-engineering.dentsuaegis.com/display/GD/Alert%3A+NodeUnusualDiskWriteRate"
     annotations:
       summary: "Unusual disk write rate (instance {{ $labels.instance }})"
-      description: "Disk is probably writing too much data (> 50 MB/s)\n VALUE = {{ $value }}\n LABELS: {{ $labels }}"
+      description: "Disk is probably writing too much data (> 250 MB/s)\n VALUE = {{ $value }}\n LABELS: {{ $labels }}"
   - alert: NodeOutOfDiskSpaceWarning
     expr: node_filesystem_free_bytes{mountpoint ="/rootfs"} / node_filesystem_size_bytes{mountpoint ="/rootfs"} * 100 < 30
     for: 5m
@@ -215,7 +215,7 @@ groups:
   rules:      
   - alert: StatefulsetDown
     expr: (kube_statefulset_status_replicas_ready / kube_statefulset_status_replicas_current) != 1
-    for: 5m
+    for: 15m
     labels:
       severity: warning
       prometheus_group: '{{ $externalLabels.prometheus_group }}'
@@ -225,7 +225,7 @@ groups:
       description: "A StatefulSet replica went down\n VALUE = {{ $value }}\n LABELS: {{ $labels }}"
   - alert: DaemonsetDown
     expr: (kube_daemonset_status_desired_number_scheduled / kube_daemonset_status_current_number_scheduled) != 1
-    for: 5m
+    for: 15m
     labels:
       severity: warning
       prometheus_group: '{{ $externalLabels.prometheus_group }}'
@@ -235,7 +235,7 @@ groups:
       description: "A DaemonSet replica went down\n VALUE = {{ $value }}\n LABELS: {{ $labels }}"
   - alert: ReplicasetDown
     expr: (kube_replicaset_spec_replicas != 0) and (kube_replicaset_status_ready_replicas / kube_replicaset_spec_replicas != 1)
-    for: 5m
+    for: 15m
     labels:
       severity: warning
       prometheus_group: '{{ $externalLabels.prometheus_group }}'
@@ -277,16 +277,6 @@ groups:
     annotations:
       description: Pod {{$labels.namespace}}/{{$labels.pod}} is was restarted {{$value}} times within the last hour
       summary: Pod is restarting frequently
-  - alert: PodNotRunning
-    expr: (kube_pod_container_status_terminated_reason {reason="Error"} or kube_pod_container_status_waiting_reason) == 1 
-    for: 10m
-    labels:
-      severity: warning
-      runbook: https://confluence-engineering.dentsuaegis.com/display/GD/Alert%3A+PodNotRunning
-      prometheus_group: '{{ $externalLabels.prometheus_group }}'          
-    annotations:
-      description: Pod {{$labels.namespace}}/{{$labels.pod}} is not running
-      summary: Pod is not running
 - name: common.availability
   rules:       
   - alert: High5xxCodesWarning
